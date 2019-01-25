@@ -33,17 +33,10 @@
 
 #include <stdint.h>
 
-// Default address of the device is 0x5B
-#define CCS811_DEFAULT_ADDRESS		0x5A
-
-#define CCS811_HW_ID_CODE			0x81
-
 #define NULL 						((void *)0)
 
-#define BIT_MASK_9(x)				((uint16_t)(0b111111111 & x))
-
-// Combine two bytes to form a single 16-bit word
-#define BYTES_TO_WORD(x,y)			((uint16_t)(( (uint16_t) x << 8 ) | ((uint16_t) y)))
+// Default address of the device is 0x5B
+#define CCS811_DEFAULT_ADDRESS		0x5A
 
 // BEGIN REGISTER MAP
 // APPLICATION REGISTER
@@ -92,6 +85,9 @@ typedef struct ccs811_dev_s ccs811_dev_t;
 typedef uint8_t (*ccs811_func_ptr)(ccs811_dev_t *dev, uint8_t reg_addr,
 		uint8_t *data, uint16_t len);
 
+/*! Error number for the CS811.  If the MSB is set, then there is an error */
+typedef uint8_t ccs811_error;
+
 /**
  * @brief CCS811 device structure
  */
@@ -114,6 +110,8 @@ struct ccs811_dev_s {
 
 /**
  * @brief Status byte returned via CCS811_STATUS
+ * 
+ * TODO: figure out if the error flag is cleared on reading.
  */
 typedef struct ccs811_status_s {
 	/*! 0 = Firmware boot mode; 1 = Firmware in application mode */
@@ -178,7 +176,7 @@ typedef struct ccs811_ntc_data_s {
  *
  * @return Error status.
  */
-uint8_t ccs811_init(ccs811_dev_t *dev);
+ccs811_error ccs811_init(ccs811_dev_t *dev);
 
 /**
  * @brief Get the current status of the CCS811 device.
@@ -212,7 +210,7 @@ ccs811_status_t ccs811_status(ccs811_dev_t *dev);
  * 
  * 
  */
-uint8_t ccs811_write_measmode(ccs811_dev_t *dev, uint8_t mode,
+ccs811_error ccs811_write_measmode(ccs811_dev_t *dev, uint8_t mode,
 		uint8_t interrupt_state, uint8_t interrupt_threshold);
 
 /**
@@ -236,10 +234,10 @@ ccs811_raw_data_t ccs811_read_raw(ccs811_dev_t *dev);
  * @param percent_humid 		Uses first 7 bits of number to represent whole number humidity
  * @param percent_humid_frac 	9 bits representing the fraction of humidity percentage (in 1/512 increments)
  * @param temp_25				7 bits representing the whole number of temperature with an offset of 25 degrees C
- * @param temp_25_frac			9 bits representign the fraction of temperature in 1/512 increments.
+ * @param temp_25_frac			9 bits representing the fraction of temperature in 1/512 increments.
  *
  */
-uint8_t ccs811_write_env_data(ccs811_dev_t *dev, uint8_t percent_humid,
+ccs811_error ccs811_write_env_data(ccs811_dev_t *dev, uint8_t percent_humid,
 		uint16_t percent_humid_frac, uint8_t temp_25, uint16_t temp_25_frac);
 
 /**
@@ -253,7 +251,7 @@ uint8_t ccs811_write_env_data(ccs811_dev_t *dev, uint8_t percent_humid,
  *
  * @return Error code.
  */
-uint8_t ccs811_start_app(ccs811_dev_t *dev);
+ccs811_error ccs811_start_app(ccs811_dev_t *dev);
 
 /**
  * @brief Retrieve the core data set defined by the structure `ccs811_alg_results_t`.
@@ -271,5 +269,9 @@ uint8_t ccs811_start_app(ccs811_dev_t *dev);
  * 
  */
 ccs811_alg_results_t ccs811_get_data(ccs811_dev_t *dev);
+
+ccs811_error ccs811_get_error_id(ccs811_dev_t *dev);
+
+uint16_t get_firmware_app_version(ccs811_dev_t *dev);
 
 #endif /* CCS811_H_ */
