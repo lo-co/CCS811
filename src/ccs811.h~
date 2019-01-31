@@ -33,7 +33,6 @@
 
 #include <stdint.h>
 
-// If NULL is not defined it will be here...
 #define NULL 						((void *)0)
 
 // Default address of the device is 0x5B
